@@ -1,0 +1,31 @@
+#include "font.h"
+#include "times.h"
+
+Timer plyrtmer;
+Timer redytmer;
+TTF_Font *font = NULL;
+
+int print(char* msg,int x, int y)
+{
+	SDL_Color txtcolor = { 255,255,255 };
+	SDL_Surface *xytetris=NULL;
+
+	xytetris = TTF_RenderText_Blended( font, msg, txtcolor);
+	apply_surface( x, y, xytetris, screen,NULL );
+	return 0;
+}
+
+int inifont()
+{
+	SDL_RWops	*rw_out;
+
+    	if( TTF_Init() == -1 )
+    	{
+    	    return 0;    
+    	}
+	//font = TTF_OpenFont( "sprites/times.ttf", 15 );
+    	rw_out = SDL_RWFromMem(times, 406760);     	
+
+	font = TTF_OpenFontRW(rw_out,0,15);
+	return 1;
+}

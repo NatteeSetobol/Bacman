@@ -1,0 +1,119 @@
+#include "SDL/SDL.h"
+#include "sdls.h"
+#include "SDL/SDL_image.h"
+
+Uint32 get_pixel32( SDL_Surface *surface, int x, int y )
+{
+    //Convert the pixels to 32 bit
+    Uint32 *pixels = (Uint32 *)surface->pixels;
+    
+    //Get the requested pixel
+    return pixels[ ( y * surface->w ) + x ];
+}
+
+void put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel )
+{
+    //Convert the pixels to 32 bit
+    Uint32 *pixels = (Uint32 *)surface->pixels;
+    
+    //Set the pixel
+    pixels[ ( y * surface->w ) + x ] = pixel;
+}
+
+
+SDL_Surface *load_image_mem(void *mem, int size)
+{
+	SDL_Surface* optimizedImage = NULL;
+	SDL_Surface* tvimage;
+	SDL_Surface* timage;
+	SDL_RWops	*rw_out;
+
+    	rw_out = SDL_RWFromMem(mem, size); 
+    	tvimage = IMG_Load_RW(rw_out, 0);
+
+	timage = SDL_DisplayFormat( tvimage ); 
+
+
+
+        optimizedImage = SDL_CreateRGBSurface( SDL_SWSURFACE,  timage->w, timage->h,  timage->format->BitsPerPixel,  timage->format->Rmask,  timage->format->Gmask,  timage->format->Bmask,timage->format->Amask );
+    //Copy color key
+       Uint32 colorkey = SDL_MapRGB( timage->format, 0xde, 0x97, 0x47 );
+            
+
+       SDL_SetColorKey( optimizedImage, SDL_RLEACCEL | SDL_SRCCOLORKEY, colorkey );
+	
+       if( SDL_MUSTLOCK( timage ) )
+       {
+       		 //Lock the surface
+       		SDL_LockSurface( timage );
+       }
+
+
+       for (int x=0;x <  timage->w;x++)
+       {
+       		for (int y=0;y <  timage->h;y++)
+		{
+        //x,y
+			Uint32 pixel = get_pixel32( timage, x, y );
+			put_pixel32( optimizedImage,  x,y, pixel );
+		}
+    	}
+
+       if( SDL_MUSTLOCK( timage ) )
+       {
+       		SDL_UnlockSurface( timage );
+       }	
+
+	//SDL_FreeSurface( tvimage );
+	//SDL_FreeSurface( timage );
+	return optimizedImage;
+}
+
+void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination,SDL_Rect* clip )
+{
+    //Temporary rectangle to hold the offsets
+    SDL_Rect offset;
+    
+    //Get the offsets
+    offset.x = x;
+    offset.y = y;
+    
+    //Blit the surface
+    SDL_BlitSurface( source, clip, destination, &offset );
+}
+
+SDL_Surface *load_image( char* filename ) 
+{
+    //The image that's loaded
+    SDL_Surface* loadedImage = NULL;
+    
+    //The optimized image that will be used
+    SDL_Surface* optimizedImage = NULL;
+    
+    //Load the image
+    loadedImage = IMG_Load( filename );
+    
+    //If the image loaded
+    if( loadedImage != NULL )
+    {
+        //Create an optimized image
+        optimizedImage = SDL_DisplayFormat( loadedImage );
+        
+        //Free the old image
+        SDL_FreeSurface( loadedImage );
+        
+        //If the image was optimized just fine
+        if( optimizedImage != NULL )
+        {
+            //Map the color key
+            Uint32 colorkey = SDL_MapRGB( optimizedImage->format, 0xde, 0x97, 0x47 );
+            
+            //Set all pixels of color R 0, G 0xFF, B 0xFF to be transparent
+            SDL_SetColorKey( optimizedImage, SDL_RLEACCEL | SDL_SRCCOLORKEY, colorkey );
+        }
+    }
+    
+    //Return the optimized image
+    return optimizedImage;
+}
+
