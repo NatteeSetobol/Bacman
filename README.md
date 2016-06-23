@@ -3,6 +3,8 @@ bacman
 
 This is a basic clone of pacman in Linux.
 
+![alt tag](https://github.com/nsetobol/bacman/blob/master/screenshot_pacman.png)
+
 Requirements:
 SDL_dev
 SDL_image
